@@ -1,0 +1,51 @@
+:root {
+    --jsm-highlight: rgb(0, 153, 255);
+    --jsm-highlight-light: rgb(21, 138, 215);
+    --jsm-special: rgb(214, 214, 214);
+    --jsm-special-light: rgb(197, 197, 197);
+    --jsm-background: rgb(244, 244, 244);
+}
+
+.jsmodal-dialog {
+    min-width: 40svw;
+    border-radius: 10px;
+    border: 2px solid black;
+    background-color: var(--jsm-background);
+}
+
+/* Vars now working! */
+/* .jsmodal-dialog::backdrop {
+    --jsm-backdrop: rgba(192, 192, 192, 0.5);
+    background: var(--jsm-backdrop);
+} */
+
+h1.jsmodal-title {
+    margin-top: 0px;
+}
+
+.jsmodal-button {
+    padding: 3px 5px;
+    border-radius: 5px;
+    border: 1px solid var(--jsm-highlight);
+    margin: 5px;
+}
+
+.jsmodal-button:focus {
+    outline: 2px solid var(--jsm-highlight-light);
+}
+
+.jsmodal-accept {
+    background-color: var(--jsm-highlight);
+}
+
+.jsmodal-dismiss {
+    background-color: var(--jsm-special);
+}
+
+.jsmodal-accept:hover {
+    background-color: var(--jsm-highlight-light);
+}
+
+.jsmodal-dismiss:hover {
+    background-color: var(--jsm-special-light);
+}
