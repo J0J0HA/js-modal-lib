@@ -5,8 +5,70 @@ let __jsmodal = {
     }
 }
 
+class JSModalConfigBuilder {
+    constructor(preconfig = {}) {
+        this.config = {
+            implicitDismiss: true,
+            explicitDismiss: true,
+            form: false,
+            explicitDismissText: "Cancel",
+            explicitAcceptText: "OK",
+            ...preconfig
+        };
+    }
+
+    allowImplicitDismiss(b = true) {
+        this.config.implicitDismiss = b;
+        return this;
+    }
+
+    allowExplicitDismiss(b = true) {
+        this.config.explicitDismiss = b;
+        return this;
+    }
+
+    allowDismiss(b = true) {
+        this.config.implicitDismiss = b;
+        this.config.explicitDismiss = b;
+        return this;
+    }
+
+    takesInputData(b = true) {
+        this.config.form = b;
+        return this;
+    }
+
+    setDismissButtonText(t) {
+        this.config.explicitDismissText = t;
+        return this;
+    }
+
+    setAcceptButtonText(t) {
+        this.config.explicitAcceptText = t;
+        return this;
+    }
+
+    build() {
+        return this.config;
+    }
+}
+
+const JSModalType = {
+    Info: new JSModalConfigBuilder()
+        .allowExplicitDismiss(false)
+        .build(),
+    Sure: new JSModalConfigBuilder()
+        .build(),
+    YN: new JSModalConfigBuilder()
+        .allowExplicitDismiss(true)
+        .allowImplicitDismiss(false)
+        .setAcceptButtonText("Yes")
+        .setDismissButtonText("No")
+        .build()
+}
+
 class JSModalDialog {
-    constructor(title) {
+    constructor(config, title) {
         this._idcount = {
             "": 0,
             "-title-1": 0,
@@ -18,13 +80,27 @@ class JSModalDialog {
             "-text": 0,
             "-raw_html": 0,
             "-raw_element": 0,
+            "-form": 0,
         }
 
+        this.config = config;
 
-        this.elm = document.createElement("dialog");
         this.id = __jsmodal._generate_id();
-        this.elm.id = this._idfor();
-        this.elm.className = "jsmodal jsmodal-dialog";
+        this.dia = document.createElement("dialog");
+
+        this.dia.id = this._idfor();
+        this.dia.className = "jsmodal jsmodal-dialog";
+
+
+        if (this.config.form) {
+            this.elm = document.createElement("form");
+            this.elm.id = this._idfor("form");
+            this.elm.className = "jsmodal jsmodal-form";
+            this.dia.appendChild(this.elm)
+        } else {
+            this.elm = this.dia;
+        }
+
         this.addTitle(title, 1);
     }
 
@@ -68,15 +144,51 @@ class JSModalDialog {
         this.elm.appendChild(new_element);
     }
 
-    apply() {
-        return document.body.appendChild(this.elm);
-    }
-
     show() {
-        return this.elm.showModal();
+        let buttons = document.createElement("div");
+
+        this.acceptButton = document.createElement("button");
+        this.acceptButton.className = "jsmodal jsmodal-button jsmodal-accept";
+        this.acceptButton.innerText = this.config.explicitAcceptText;
+        buttons.append(this.acceptButton);
+
+        if (this.config.explicitDismiss) {
+            this.dismissButton = document.createElement("button");
+            this.dismissButton.innerText = this.config.explicitDismissText;
+            this.dismissButton.className = "jsmodal jsmodal-button jsmodal-dismiss";
+            buttons.append(this.dismissButton);
+        }
+
+        this.dia.appendChild(buttons);
+
+        document.body.appendChild(this.dia);
+
+        return this.reopen();
     }
 
-    hide() {
-        return this.elm.close();
+    reopen() {
+        return new Promise((resolve, reject) => {
+            this.acceptButton.onclick = () => {
+                resolve(this.acceptButton.innerText);
+                this.dia.close();
+            };
+            if (this.config.explicitDismiss)
+                this.dismissButton.onclick = () => {
+                    reject(this.dismissButton.innerText);
+                    this.dia.close();
+                };
+
+            if (this.config.implicitDismiss) {
+                this.dia.onclick = (e) => {
+                    if (e.target === this.dia) {
+                        reject(e);
+                        this.dia.close();
+                    }
+                }
+            } else {
+                console.error("TODO: BLock ESC.")
+            }
+            this.dia.showModal();
+        })
     }
 }
